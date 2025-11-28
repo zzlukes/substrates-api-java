@@ -14,6 +14,8 @@ export const Controls: React.FC<ControlsProps> = ({ config, onConfigChange, isPl
     const toLog = (val: number) => Math.log10(val);
     const fromLog = (val: number) => Math.pow(10, val);
 
+    const isDPI = config.mode === 'DPI';
+
     return (
         <div className="p-4 bg-slate-800 text-slate-200 rounded-lg shadow-lg space-y-4">
             <div className="flex items-center justify-between">
@@ -33,6 +35,28 @@ export const Controls: React.FC<ControlsProps> = ({ config, onConfigChange, isPl
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     )}
+                </button>
+            </div>
+
+            {/* Mode Switcher */}
+            <div className="flex bg-slate-900 rounded-lg p-1">
+                <button
+                    className={`flex-1 py-2 rounded-md text-sm font-bold transition-all ${!isDPI ? 'bg-slate-700 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
+                    onClick={() => onConfigChange({ mode: 'MOSQUITO' })}
+                >
+                    Mosquito Defense
+                </button>
+                <button
+                    className={`flex-1 py-2 rounded-md text-sm font-bold transition-all ${isDPI ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
+                    onClick={() => onConfigChange({ mode: 'DPI' })}
+                >
+                    Network DPI
+                </button>
+                <button
+                    className={`flex-1 py-2 rounded-md text-sm font-bold transition-all ${config.mode === 'ROBOTIC' ? 'bg-amber-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
+                    onClick={() => onConfigChange({ mode: 'ROBOTIC' })}
+                >
+                    Robotic Control
                 </button>
             </div>
 
@@ -60,7 +84,7 @@ export const Controls: React.FC<ControlsProps> = ({ config, onConfigChange, isPl
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <label className="block text-sm font-medium text-amber-400">
-                        Cloud Latency: {config.traditionalLatency}ms
+                        {isDPI ? 'Appliance Latency (Buffered)' : 'Vision Latency'} : {config.traditionalLatency}ms
                     </label>
                     <input
                         type="range"
@@ -73,7 +97,7 @@ export const Controls: React.FC<ControlsProps> = ({ config, onConfigChange, isPl
                 </div>
                 <div className="space-y-2">
                     <label className="block text-sm font-medium text-blue-400">
-                        Edge Latency: {config.substratesLatency < 0.001 ? (config.substratesLatency * 1000000).toFixed(0) + 'ns' : config.substratesLatency < 1 ? (config.substratesLatency * 1000).toFixed(0) + 'µs' : config.substratesLatency.toFixed(2) + 'ms'}
+                        {isDPI ? 'Wire Speed Latency' : 'Edge Latency'} : {config.substratesLatency < 0.001 ? (config.substratesLatency * 1000000).toFixed(0) + 'ns' : config.substratesLatency < 1 ? (config.substratesLatency * 1000).toFixed(0) + 'µs' : config.substratesLatency.toFixed(2) + 'ms'}
                     </label>
                     <input
                         type="range"
@@ -110,16 +134,18 @@ export const Controls: React.FC<ControlsProps> = ({ config, onConfigChange, isPl
                 </div>
 
                 <div className="space-y-2">
-                    <label className="text-sm text-slate-400">Arrival Rate: {config.arrivalRate} / sec</label>
+                    <label className="text-sm text-slate-400">{isDPI ? 'Packet Arrival Rate' : 'Arrival Rate'}: {config.arrivalRate} / sec</label>
                     <input
                         type="range"
                         min="0"
-                        max="20"
+                        max={isDPI ? "100" : "20"}
                         value={config.arrivalRate}
                         onChange={(e) => onConfigChange({ arrivalRate: parseInt(e.target.value) })}
                         className="w-full accent-blue-500"
                     />
                 </div>
+
+
             </div>
         </div>
     );
