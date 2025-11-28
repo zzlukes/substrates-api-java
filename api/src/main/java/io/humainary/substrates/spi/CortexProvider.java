@@ -10,18 +10,19 @@ import java.util.ServiceLoader;
 
 /// Abstract provider class for loading the Cortex singleton instance.
 ///
-/// SPI providers must extend this class and implement the [#create()] method to return
-/// their Cortex implementation. Provider discovery uses two mechanisms:
+/// SPI providers must extend this class and implement the [#create()] method to
+/// return their Cortex implementation. Provider discovery uses two mechanisms:
 ///
-/// 1. **System property** (primary): Specify via [Substrates#PROVIDER_PROPERTY]
-/// 2. **ServiceLoader** (fallback): Configure via `META-INF/services/` resource
+/// 1. **System property** (primary): Specify via
+/// [Substrates#PROVIDER_PROPERTY] 2. **ServiceLoader** (fallback): Configure via
+/// `META-INF/services/` resource
 ///
 /// All providers must have a public no-arg constructor.
 ///
-/// This class uses the initialization-on-demand holder idiom to provide thread-safe
-/// lazy initialization without synchronization. The INSTANCE field is initialized only
-/// when this class is first referenced, which occurs on the first call to
-/// [Substrates#cortex()].
+/// This class uses the initialization-on-demand holder idiom to provide
+/// thread-safe lazy initialization without synchronization. The INSTANCE field
+/// is initialized only when this class is first referenced, which occurs on the
+/// first call to [Substrates#cortex()].
 ///
 /// @see Cortex
 /// @see ServiceLoader
@@ -31,12 +32,14 @@ import java.util.ServiceLoader;
 public abstract class CortexProvider {
 
   /// The singleton Cortex instance, initialized on first access to this class.
-  private static final Cortex INSTANCE = load ();
+  private static final Cortex INSTANCE = load();
 
   /// Protected constructor for subclasses.
   ///
-  /// SPI providers must provide a public no-arg constructor that delegates to this.
-  protected CortexProvider () { }
+  /// SPI providers must provide a public no-arg constructor that delegates
+  /// to this.
+  protected CortexProvider() {
+  }
 
   /// Returns the singleton Cortex instance.
   ///
@@ -45,75 +48,63 @@ public abstract class CortexProvider {
   /// @return The singleton Cortex instance
 
   @NotNull
-  public static Cortex cortex () {
+  public static Cortex cortex() {
 
     return INSTANCE;
 
   }
 
-  /// Loads the Cortex instance by instantiating the provider subclass.
-  /// First attempts to load via system property, then falls back to ServiceLoader.
+  /// Loads the Cortex instance by instantiating the provider subclass. First
+  /// attempts to load via system property, then falls back to ServiceLoader.
   ///
   /// @return A Cortex instance from the provider
   /// @throws IllegalStateException if loading fails
 
   @NotNull
-  private static Cortex load () {
+  private static Cortex load() {
 
-    final var name =
-      System.getProperty (
-        Substrates.PROVIDER_PROPERTY
-      );
+    final var name = System.getProperty(
+        Substrates.PROVIDER_PROPERTY);
 
     // Try system property first (primary mechanism)
-    if ( name != null && !name.isBlank () ) {
+    if (name != null && !name.trim().isEmpty()) {
 
       try {
 
-        final var instance =
-          Class
-            .forName ( name )
-            .getDeclaredConstructor ()
-            .newInstance ();
+        final var instance = Class
+            .forName(name)
+            .getDeclaredConstructor()
+            .newInstance();
 
-        if ( instance instanceof final CortexProvider provider ) {
+        if (instance instanceof final CortexProvider provider) {
 
-          return provider.create ();
+          return provider.create();
 
         }
 
-        throw new IllegalStateException (
-          "Provider class '%s' does not extend CortexProvider".formatted ( name )
-        );
+        throw new IllegalStateException(
+            String.format("Provider class '%s' does not extend CortexProvider", name));
 
-      } catch (
-        final ReflectiveOperationException e
-      ) {
+      } catch (final ReflectiveOperationException e) {
 
-        throw new IllegalStateException (
-          "Failed to load cortex provider class '%s': %s".formatted (
-            name,
-            e.getMessage ()
-          ),
-          e
-        );
+        throw new IllegalStateException(
+            String.format("Failed to load cortex provider class '%s': %s", name, e.getMessage()),
+            e);
 
       }
 
     }
 
     // Fall back to ServiceLoader discovery
-    return
-      ServiceLoader
-        .load ( CortexProvider.class )
-        .findFirst ()
-        .map ( CortexProvider::create )
-        .orElseThrow (
-          () -> new IllegalStateException (
-            "No Provider found. Either set system property '%s' or provide a ServiceLoader configuration."
-              .formatted ( Substrates.PROVIDER_PROPERTY )
-          )
-        );
+    final java.util.Iterator<CortexProvider> iterator = ServiceLoader.load(CortexProvider.class).iterator();
+
+    if (iterator.hasNext()) {
+      return iterator.next().create();
+    }
+
+    throw new IllegalStateException(
+        String.format("No Provider found. Either set system property '%s' or provide a ServiceLoader configuration.",
+            Substrates.PROVIDER_PROPERTY));
 
   }
 
@@ -125,6 +116,6 @@ public abstract class CortexProvider {
   /// @return The Cortex implementation
 
   @NotNull
-  protected abstract Cortex create ();
+  protected abstract Cortex create();
 
 }
